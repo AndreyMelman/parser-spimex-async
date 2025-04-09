@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import (
     BaseModel,
     PostgresDsn,
@@ -6,6 +8,10 @@ from pydantic_settings import (
     BaseSettings,
     SettingsConfigDict,
 )
+
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class DatabaseConfig(BaseModel):
@@ -24,9 +30,18 @@ class DatabaseConfig(BaseModel):
     }
 
 
+class Config(BaseModel):
+    base_url: str = "https://spimex.com/markets/oil_products/trades/results/"
+    download_dir: str = "downloads/"
+    target_date: datetime = datetime(2023, 1, 1)
+    concurrent_downloads: int = 200
+    max_retries: int = 3
+    concurrent_processing: int = 100
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=BASE_DIR / ".env",
         case_sensitive=False,
         env_nested_delimiter="__",
         env_prefix="APP_CONFIG__",
@@ -34,6 +49,7 @@ class Settings(BaseSettings):
     )
 
     db: DatabaseConfig
+    cf: Config = Config()
 
 
 settings = Settings()
